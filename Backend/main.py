@@ -9,7 +9,7 @@ from . import crud, models
 from .database import Base, engine, get_db
 from .schemas import StudentCreate, StudentList, StudentRead, StudentUpdate
 ROOT = Path(__file__).resolve().parent
-FRONTEND = ROOT / "frontend"
+FRONTEND = ROOT.parent / "frontend"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 # إنشاء جدول students تلقائياً إذا لم يكن موجوداً؛ قاعدة MySQL نفسها يجب إنشاؤها مسبقاً.
@@ -22,14 +22,23 @@ version="1.0.0",
 lifespan=lifespan,
 )
 # نفس الخادم يقدم ملفات CSS وJavaScript، لذا لا حاجة لإعداد CORS منفصل.
-app.mount("/static", StaticFiles(directory=FRONTEND), name="static")
-
-
+#عدلت هذه سطر حتى اجرب كود في swagger
+#app.mount("/static", StaticFiles(directory=FRONTEND), name="static")
+# تشغيل ملفات الواجهة فقط إذا كان المجلد موجودًا
+if FRONTEND.is_dir():
+   app.mount(
+       "/static",
+       StaticFiles(directory=FRONTEND)
+       ,name="static")
+#هنا ايضا اقوم بتعديل هذا السطر حتى اجرب كود في swagger
+#@app.get("/", include_in_schema=False)def home():return FileResponse(FRONTEND / "index.html")
+# الصفحة الرئيسية لواجهة API
 @app.get("/", include_in_schema=False)
 def home():
-#"فتح واجهة HTML عند زيارة الرابط الأساسي."""
-    return FileResponse(FRONTEND / "index.html")
-
+    return {
+           "message": "Student Management API is running",
+            "swagger": "/docs"
+}
 
 @app.get("/health", tags=["System"])
 def health():
@@ -40,8 +49,8 @@ def health():
 def require_student(db: Session, student_id: int) -> models.Student:
     student = crud.get_student(db, student_id)
     if student is None:
-        raise HTTPException(status_code=404, detail="الطالب غير موجود")
-        return student
+       raise HTTPException(status_code=404, detail="الطالب غير موجود")
+    return student
 
 
 def prevent_duplicate_number(db: Session, student_number: str, current_id: int | None = None):

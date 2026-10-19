@@ -1,0 +1,30 @@
+# MySQL Database using Docker
+
+services:
+mysql:
+image: mysql:8.0
+
+container_name: student_mysql_demo
+
+restart: unless-stopped
+
+environment:
+MYSQL_ROOT_PASSWORD: root_demo_password
+MYSQL_DATABASE: student_management
+MYSQL_USER: student_user
+MYSQL_PASSWORD: student_pass
+
+ports:
+- "127.0.0.1:3306:3306"
+
+volumes:
+- mysql_student_data:/var/lib/mysql
+
+healthcheck:
+test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot_demo_password --silent"]
+interval: 5s
+timeout: 5s
+retries: 20
+
+volumes:
+mysql_student_data:

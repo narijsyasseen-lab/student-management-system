@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="واجهة نظام إدارة بيانات الطلاب باستخدام FastAPI وMySQL">
+    <title>نظام إدارة بيانات الطلاب</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/script.js" defer></script>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <div class="logo">🎓</div>
+            <div>
+                <h1>نظام إدارة بيانات الطلاب</h1>
+                <p>مشروع FastAPI + MySQL — إضافة، عرض، تعديل، حذف وبحث</p>
+            </div>
+            <a class="docs-link" href="/docs" target="_blank" rel="noopener">Swagger API ↗️</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- يعرض JavaScript الرسائل بعد نجاح أو فشل العمليات. -->
+        <div id="message" class="message hidden" role="status" aria-live="polite"></div>
+
+        <section class="card" id="form-section" aria-labelledby="form-title">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">الخطوة الأولى</span>
+                    <h2 id="form-title">إضافة طالب جديد</h2>
+                </div>
+                <span class="pill">الحقول المميزة بـ * مطلوبة</span>
+            </div>
+
+            <!-- نفس النموذج يستخدم للإضافة POST أو التعديل PUT حسب editId في JavaScript. -->
+            <form id="student-form">
+                <div class="form-grid">
+                    <label>الرقم الجامعي *
+                        <input name="student_number" id="student_number" placeholder="ST2026001" minlength="3"
+                            maxlength="20" pattern="[A-Za-z0-9_-]+" required>
+                    </label>
+                    <label>اسم الطالب الكامل *
+                        <input name="full_name" id="full_name" placeholder="أحمد محمد علي" minlength="3" maxlength="100"
+                            required>
+                    </label>
+                    <label>القسم *
+                        <input name="department" id="department" placeholder="علوم الحاسوب" minlength="2"
+                            maxlength="100" required>
+                    </label>
+                    <label>المرحلة الدراسية *
+                        <select name="stage" id="stage" required>
+                            <option value="">اختر المرحلة</option>
+                            <option value="1">الأولى</option>
+                            <option value="2">الثانية</option>
+                            <option value="3">الثالثة</option>
+                            <option value="4">الرابعة</option>
+                            <option value="5">الخامسة</option>
+                            <option value="6">السادسة</option>
+                        </select>
+                    </label>
+                    <label>البريد الإلكتروني (اختياري)
+                        <input name="email" id="email" type="email" placeholder="student@example.com">
+                    </label>
+                    <label>رقم الهاتف (اختياري)
+                        <input name="phone" id="phone" type="tel" minlength="7" maxlength="20" pattern="[0-9+ \-]+"
+                            placeholder="07701234567">
+                    </label>
+                </div>
+                <div class="actions">
+                    <button type="submit" id="save-button" class="button primary">+ إضافة الطالب</button>
+                    <button type="button" id="cancel-button" class="button muted hidden">إلغاء التعديل</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card" aria-labelledby="list-title">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">الخطوة الثانية</span>
+                    <h2 id="list-title">سجل الطلاب</h2>
+                </div>
+                <span class="counter" id="total-students">0 طالب</span>
+            </div>
+
+            <!-- حقول البحث والتصفية متصلة بـ GET /api/students. -->
+            <div class="filter-grid">
+                <label>بحث بالاسم أو الرقم
+                    <input id="search" placeholder="اكتب اسماً أو رقماً جامعياً" type="search">
+                </label>
+                <label>تصفية حسب القسم
+                    <input id="filter-department" placeholder="مثلاً: علوم الحاسوب">
+                </label>
+                <label>تصفية حسب المرحلة
+                    <select id="filter-stage">
+                        <option value="">جميع المراحل</option>
+                        <option value="1">الأولى</option>
+                        <option value="2">الثانية</option>
+                        <option value="3">الثالثة</option>
+                        <option value="4">الرابعة</option>
+                        <option value="5">الخامسة</option>
+                        <option value="6">السادسة</option>
+                    </select>
+                </label>
+                <button id="clear-filters" class="button muted" type="button">مسح الفلاتر</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>الرقم الجامعي</th>
+                            <th>الاسم</th>
+                            <th>القسم</th>
+                            <th>المرحلة</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الهاتف</th>
+                            <th>العمليات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="students-body">
+                        <tr>
+                            <td colspan="8" class="empty-state">جاري تحميل الطلاب...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <span id="page-info">الصفحة 1</span>
+                <div class="actions">
+                    <button class="button muted" id="prev-page" disabled type="button">السابق</button>
+                    <button class="button muted" id="next-page" disabled type="button">التالي</button>
+                </div>
+            </div>
+        </section>
+
+        <footer>مشروع تدريبي لإدارة بيانات الطلاب — للاستخدام المحلي أو التعليمي</footer>
+    </main>
+</body>
+
+</html>

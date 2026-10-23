@@ -2,143 +2,378 @@
 <html lang="ar" dir="rtl">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="واجهة نظام إدارة بيانات الطلاب باستخدام FastAPI وMySQL">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
     <title>نظام إدارة بيانات الطلاب</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <script src="/static/script.js" defer></script>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
 </head>
 
 <body>
-    <header class="site-header">
-        <div class="container header-inner">
-            <div class="logo">🎓</div>
+    <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <symbol id="i-cap" viewBox="0 0 24 24">
+            <path d="m2 9 10-5 10 5-10 5L2 9Zm4 3v5c4 3 8 3 12 0v-5M22 9v6" />
+        </symbol>
+        <symbol id="i-home" viewBox="0 0 24 24">
+            <path d="m3 10 9-7 9 7v10H3V10Zm6 10v-7h6v7" />
+        </symbol>
+        <symbol id="i-add" viewBox="0 0 24 24">
+            <circle cx="9" cy="7" r="3" />
+            <path d="M3 20v-3a6 6 0 0 1 12 0v3M19 8v8m-4-4h8" />
+        </symbol>
+        <symbol id="i-users" viewBox="0 0 24 24">
+            <circle cx="9" cy="8" r="3" />
+            <path d="M3 20v-2a6 6 0 0 1 12 0v2M17 6a3 3 0 0 1 0 6m1 3c2 0 3 2 3 4" />
+        </symbol>
+        <symbol id="i-chart" viewBox="0 0 24 24">
+            <path d="M4 20V11h4v9M10 20V4h4v16M16 20v-7h4v7M2 20h20" />
+        </symbol>
+        <symbol id="i-settings" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3" />
+            <path
+                d="M10 2h4l.6 2.4 2.1.9 2.1-1.2 2.8 2.8-1.2 2.1.9 2.1L23 12l-1.7 1.4-.9 2.1 1.2 2.1-2.8 2.8-2.1-1.2-2.1.9L14 22h-4l-.6-2.4-2.1-.9-2.1 1.2-2.8-2.8 1.2-2.1-.9-2.1L1 12l1.7-1.4.9-2.1-1.2-2.1 2.8-2.8 2.1 1.2 2.1-.9L10 2Z" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 24 24">
+            <circle cx="10.8" cy="10.8" r="6.4" />
+            <path d="m16 16 5 5" />
+        </symbol>
+        <symbol id="i-save" viewBox="0 0 24 24">
+            <path d="M4 3h14l3 3v15H3V3h1Zm3 0v7h10V3M7 21v-8h10v8" />
+        </symbol>
+        <symbol id="i-reset" viewBox="0 0 24 24">
+            <path d="M3 11a9 9 0 1 1 2 6M3 4v7h7" />
+        </symbol>
+        <symbol id="i-trash" viewBox="0 0 24 24">
+            <path d="M4 7h16M9 7V4h6v3m-9 0 1 14h10l1-14M10 11v6m4-6v6" />
+        </symbol>
+        <symbol id="i-edit" viewBox="0 0 24 24">
+            <path d="m4 16-1 5 5-1L20 8l-4-4L4 16Zm9-9 4 4" />
+        </symbol>
+        <symbol id="i-eye" viewBox="0 0 24 24">
+            <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" />
+            <circle cx="12" cy="12" r="3" />
+        </symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24">
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <path d="m3 7 9 7 9-7" />
+        </symbol>
+        <symbol id="i-phone" viewBox="0 0 24 24">
+            <path d="M7 3 4 5c0 8 7 15 15 15l2-3-5-4-2 2c-3-1-5-3-6-6l2-2-3-4Z" />
+        </symbol>
+        <symbol id="i-id" viewBox="0 0 24 24">
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <circle cx="8" cy="11" r="2" />
+            <path d="M5 16c1-2 5-2 6 0M14 10h5m-5 4h5" />
+        </symbol>
+        <symbol id="i-list" viewBox="0 0 24 24">
+            <path d="M9 5h12M9 12h12M9 19h12M3 5h2M3 12h2M3 19h2" />
+        </symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+        </symbol>
+        <symbol id="i-close" viewBox="0 0 24 24">
+            <path d="m5 5 14 14M19 5 5 19" />
+        </symbol>
+        <symbol id="i-download" viewBox="0 0 24 24">
+            <path d="M12 2v13m-5-5 5 5 5-5M3 18v4h18v-4" />
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24">
+            <path d="m4 12 5 5L20 6" />
+        </symbol>
+    </svg>
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon"><svg>
+                    <use href="#i-cap" />
+                </svg></div>
             <div>
                 <h1>نظام إدارة بيانات الطلاب</h1>
-                <p>مشروع FastAPI + MySQL — إضافة، عرض، تعديل، حذف وبحث</p>
+                <p>Student Management System · FastAPI + MySQL</p>
             </div>
-            <a class="docs-link" href="/docs" target="_blank" rel="noopener">Swagger API ↗️</a>
+        </div>
+        <div class="topbar-left">
+            <div class="admin-user"><span class="admin-avatar"><svg>
+                        <use href="#i-users" />
+                    </svg></span><span>مرحباً، إدارة النظام</span></div>
+            <button id="menu-toggle" class="mobile-menu icon-button" type="button" aria-label="فتح القائمة"><svg>
+                    <use href="#i-menu" />
+                </svg></button>
         </div>
     </header>
 
-    <main class="container">
-        <!-- يعرض JavaScript الرسائل بعد نجاح أو فشل العمليات. -->
-        <div id="message" class="message hidden" role="status" aria-live="polite"></div>
+    <aside id="sidebar" class="sidebar" aria-label="قائمة التنقل">
+        <p class="sidebar-caption">القائمة الرئيسية</p>
+        <nav class="nav-list">
+            <button class="nav-link" type="button" data-go="home"><svg>
+                    <use href="#i-home" />
+                </svg><span>الرئيسية</span></button>
+            <button class="nav-link active" type="button" data-go="add"><svg>
+                    <use href="#i-add" />
+                </svg><span>إضافة طالب جديد</span><span class="nav-arrow">‹</span></button>
 
-        <section class="card" id="form-section" aria-labelledby="form-title">
-            <div class="section-heading">
-                <div>
-                    <span class="eyebrow">الخطوة الأولى</span>
-                    <h2 id="form-title">إضافة طالب جديد</h2>
+            <button class="nav-link" type="button" data-go="students"><svg>
+                    <use href="#i-list" />
+                </svg><span>قائمة الطلاب</span></button>
+            <button class="nav-link" type="button" data-go="reports"><svg>
+                    <use href="#i-chart" />
+                </svg><span>التقارير</span></button>
+            <button class="nav-link" type="button" data-go="settings"><svg>
+                    <use href="#i-settings" />
+                </svg><span>الإعدادات والاتصال</span></button>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="online-dot"></div><span id="sidebar-status">جاري التحقق من الاتصال</span>
+        </div>
+    </aside>
+    <div id="sidebar-overlay" class="sidebar-overlay" hidden></div>
+
+    <div class="app-main">
+        <main class="content">
+            <section class="hero" aria-label="عنوان الصفحة">
+                <div class="hero-text"><span class="eyebrow">النظام الأكاديمي</span>
+                    <h2 id="hero-title">إضافة طالب جديد</h2>
+                    <p id="hero-description">يرجى تعبئة البيانات التالية لإضافة طالب جديد إلى النظام</p>
                 </div>
-                <span class="pill">الحقول المميزة بـ * مطلوبة</span>
-            </div>
-
-            <!-- نفس النموذج يستخدم للإضافة POST أو التعديل PUT حسب editId في JavaScript. -->
-            <form id="student-form">
-                <div class="form-grid">
-                    <label>الرقم الجامعي *
-                        <input name="student_number" id="student_number" placeholder="ST2026001" minlength="3"
-                            maxlength="20" pattern="[A-Za-z0-9_-]+" required>
-                    </label>
-                    <label>اسم الطالب الكامل *
-                        <input name="full_name" id="full_name" placeholder="أحمد محمد علي" minlength="3" maxlength="100"
-                            required>
-                    </label>
-                    <label>القسم *
-                        <input name="department" id="department" placeholder="علوم الحاسوب" minlength="2"
-                            maxlength="100" required>
-                    </label>
-                    <label>المرحلة الدراسية *
-                        <select name="stage" id="stage" required>
-                            <option value="">اختر المرحلة</option>
-                            <option value="1">الأولى</option>
-                            <option value="2">الثانية</option>
-                            <option value="3">الثالثة</option>
-                            <option value="4">الرابعة</option>
-                            <option value="5">الخامسة</option>
-                            <option value="6">السادسة</option>
-                        </select>
-                    </label>
-                    <label>البريد الإلكتروني (اختياري)
-                        <input name="email" id="email" type="email" placeholder="student@example.com">
-                    </label>
-                    <label>رقم الهاتف (اختياري)
-                        <input name="phone" id="phone" type="tel" minlength="7" maxlength="20" pattern="[0-9+ \-]+"
-                            placeholder="07701234567">
-                    </label>
+                <div class="hero-art" aria-hidden="true">
+                    <svg viewBox="0 0 310 175">
+                        <defs>
+                            <linearGradient id="book" x1="0" y1="0" x2="1" y2="1">
+                                <stop stop-color="#2a7edf" />
+                                <stop offset="1" stop-color="#104781" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="154" cy="79" r="72" fill="#d9eafe" />
+                        <ellipse cx="151" cy="151" rx="121" ry="11" fill="#c2dafa" opacity=".65" />
+                        <path d="M93 121h122v19H93z" fill="#174e99" />
+                        <path d="M102 123h117v12H102z" fill="white" />
+                        <path d="M85 102h126v19H85z" fill="#2d78d1" />
+                        <path d="M94 105h122v11H94z" fill="#fff" />
+                        <path d="M104 83h109v18H104z" fill="#0d3e7d" />
+                        <path d="M110 86h108v10H110z" fill="#fff" />
+                        <path d="m61 58 94-39 96 38-96 39L61 58Z" fill="url(#book)" />
+                        <path d="M94 73v23c37 28 86 26 123-1V73l-61 24L94 73Z" fill="#1556ad" />
+                        <path d="M251 57v56" fill="none" stroke="#f4b21b" stroke-width="5" stroke-linecap="round" />
+                        <circle cx="251" cy="113" r="7" fill="#f6b31d" />
+                        <path d="m251 120-10 24h20l-10-24Z" fill="#ffbf32" />
+                        <path
+                            d="M259 150c-6-34 9-57 31-68M275 113c-20-4-17-23-15-28 21 5 19 21 15 28ZM276 136c17-19 27-15 29-13-2 12-16 21-29 13Z"
+                            fill="#5eafad" stroke="#489e9c" stroke-width="2" />
+                    </svg>
                 </div>
-                <div class="actions">
-                    <button type="submit" id="save-button" class="button primary">+ إضافة الطالب</button>
-                    <button type="button" id="cancel-button" class="button muted hidden">إلغاء التعديل</button>
+            </section>
+
+            <section id="page-add" class="page active" aria-labelledby="form-heading">
+                <div class="panel form-panel" id="form-section">
+                    <div class="section-label"><svg>
+                            <use href="#i-users" />
+                        </svg><span id="form-heading">البيانات الأكاديمية والشخصية</span></div>
+                    <p class="form-hint">الحقول التي تحمل علامة <b>*</b> مطلوبة</p>
+                    <form id="student-form">
+                        <div class="form-grid">
+                            <label class="field"><span>اسم الطالب الكامل <b>*</b></span><span class="control"><svg>
+                                        <use href="#i-users" />
+                                    </svg><input id="full_name" name="full_name" required minlength="3" maxlength="150"
+                                        placeholder="مثال: أحمد محمد علي" autocomplete="name" /></span></label>
+                            <label class="field"><span>التخصص / القسم <b>*</b></span><span class="control"><svg>
+                                        <use href="#i-list" />
+                                    </svg><input id="department" name="department" required maxlength="100"
+                                        placeholder="مثال: علوم الحاسوب" list="department-options" /></span></label>
+                            <label class="field"><span>الرقم الجامعي <b>*</b></span><span class="control"><svg>
+                                        <use href="#i-id" />
+                                    </svg><input id="student_number" name="student_number" required maxlength="50"
+                                        placeholder="مثال: ST2026001" dir="ltr" /></span></label>
+                            <label class="field"><span>المرحلة الدراسية <b>*</b></span><span class="control"><svg>
+                                        <use href="#i-cap" />
+                                    </svg><select id="stage" name="stage" required>
+                                        <option value="">اختر المرحلة</option>
+                                        <option value="1">الأولى</option>
+                                        <option value="2">الثانية</option>
+                                        <option value="3">الثالثة</option>
+                                        <option value="4">الرابعة</option>
+                                        <option value="5">الخامسة</option>
+                                        <option value="6">السادسة</option>
+                                    </select></span></label>
+
+                            <label class="field"><span>المعدل التراكمي GPA (من 4)</span><span class="control"><svg>
+                                        <use href="#i-chart" />
+                                    </svg><input id="gpa" name="gpa" type="number" min="0" max="4" step="0.01"
+                                        placeholder="مثال: 3.50" dir="ltr" /></span></label>
+                            <label class="field"><span>الحالة الدراسية</span><span class="control"><svg>
+                                        <use href="#i-check" />
+                                    </svg><select id="status" name="status">
+                                        <option value="مستمر">مستمر</option>
+                                        <option value="متخرج">متخرج</option>
+                                        <option value="مؤجل">مؤجل</option>
+                                        <option value="منسحب">منسحب</option>
+                                    </select></span></label>
+                            <label class="field"><span>البريد الإلكتروني (اختياري)</span><span class="control"><svg>
+                                        <use href="#i-mail" />
+                                    </svg><input id="email" name="email" type="email" maxlength="255"
+                                        placeholder="student@example.com" dir="ltr" /></span></label>
+                            <label class="field"><span>رقم الهاتف (اختياري)</span><span class="control"><svg>
+                                        <use href="#i-phone" />
+                                    </svg><input id="phone" name="phone" type="tel" maxlength="30"
+                                        placeholder="07701234567" dir="ltr" /></span></label>
+                        </div>
+                        <div class="form-actions"><button id="save-button" class="btn btn-primary" type="submit"><svg>
+                                    <use href="#i-save" />
+                                </svg><span>إضافة الطالب</span></button>
+                            <div class="action-left"><button id="cancel-button" class="btn btn-ghost hidden"
+                                    type="button">إلغاء التعديل</button><button id="reset-button"
+                                    class="btn btn-secondary" type="reset"><svg>
+                                        <use href="#i-reset" />
+                                    </svg><span>إعادة تعيين</span></button></div>
+                        </div>
+                    </form>
+                    <datalist id="department-options">
+                        <option value="علوم الحاسوب" />
+                        <option value="هندسة البرمجيات" />
+                        <option value="تقنية المعلومات" />
+                        <option value="هندسة الحاسوب" />
+                        <option value="إدارة الأعمال" />
+                        <option value="الرياضيات" />
+                    </datalist>
                 </div>
-            </form>
-        </section>
+            </section>
 
-        <section class="card" aria-labelledby="list-title">
-            <div class="section-heading">
-                <div>
-                    <span class="eyebrow">الخطوة الثانية</span>
-                    <h2 id="list-title">سجل الطلاب</h2>
+            <section id="page-students" class="page" aria-labelledby="list-heading">
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h3 id="list-heading">سجل الطلاب</h3>
+                            <p>عرض وبحث وتصفية وتعديل وحذف بيانات الطلاب</p>
+                        </div><button id="new-student" class="btn btn-primary" type="button"><svg>
+                                <use href="#i-add" />
+                            </svg> إضافة طالب</button>
+                    </div>
+                    <div class="filter-grid"><label class="field"><span>البحث بالاسم أو الرقم الجامعي</span><span
+                                class="control"><svg>
+                                    <use href="#i-search" />
+                                </svg><input id="search" type="search"
+                                    placeholder="اكتب اسم الطالب أو رقمه" /></span></label><label
+                            class="field"><span>التخصص</span><select id="filter-department">
+                                <option value="">كل التخصصات</option>
+                            </select></label><label class="field"><span>المرحلة</span><select id="filter-stage">
+                                <option value="">كل المراحل</option>
+                                <option value="1">الأولى</option>
+                                <option value="2">الثانية</option>
+                                <option value="3">الثالثة</option>
+                                <option value="4">الرابعة</option>
+                                <option value="5">الخامسة</option>
+                                <option value="6">السادسة</option>
+                            </select></label><label class="field"><span>الحالة</span><select id="filter-status">
+                                <option value="">كل الحالات</option>
+                                <option value="مستمر">مستمر</option>
+                                <option value="متخرج">متخرج</option>
+                                <option value="مؤجل">مؤجل</option>
+                                <option value="منسحب">منسحب</option>
+                            </select></label></div>
+                    <div class="table-meta"><span id="total-students">0 طالب</span><button id="clear-filters"
+                            class="text-button" type="button">مسح التصفية</button></div>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>الرقم الجامعي</th>
+                                    <th>اسم الطالب</th>
+                                    <th>التخصص</th>
+                                    <th>المرحلة</th>
+                                    <th>GPA</th>
+                                    <th>الحالة</th>
+                                    <th>العمليات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-body">
+                                <tr>
+                                    <td colspan="7" class="empty-state">جاري تحميل بيانات الطلاب...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination"><span id="page-info">الصفحة 1 من 1</span>
+                        <div><button id="prev-page" type="button"
+                                class="btn btn-secondary btn-small">السابق</button><button id="next-page" type="button"
+                                class="btn btn-secondary btn-small">التالي</button></div>
+                    </div>
                 </div>
-                <span class="counter" id="total-students">0 طالب</span>
-            </div>
-
-            <!-- حقول البحث والتصفية متصلة بـ GET /api/students. -->
-            <div class="filter-grid">
-                <label>بحث بالاسم أو الرقم
-                    <input id="search" placeholder="اكتب اسماً أو رقماً جامعياً" type="search">
-                </label>
-                <label>تصفية حسب القسم
-                    <input id="filter-department" placeholder="مثلاً: علوم الحاسوب">
-                </label>
-                <label>تصفية حسب المرحلة
-                    <select id="filter-stage">
-                        <option value="">جميع المراحل</option>
-                        <option value="1">الأولى</option>
-                        <option value="2">الثانية</option>
-                        <option value="3">الثالثة</option>
-                        <option value="4">الرابعة</option>
-                        <option value="5">الخامسة</option>
-                        <option value="6">السادسة</option>
-                    </select>
-                </label>
-                <button id="clear-filters" class="button muted" type="button">مسح الفلاتر</button>
-            </div>
-
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>الرقم الجامعي</th>
-                            <th>الاسم</th>
-                            <th>القسم</th>
-                            <th>المرحلة</th>
-                            <th>البريد الإلكتروني</th>
-                            <th>الهاتف</th>
-                            <th>العمليات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="students-body">
-                        <tr>
-                            <td colspan="8" class="empty-state">جاري تحميل الطلاب...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="pagination">
-                <span id="page-info">الصفحة 1</span>
-                <div class="actions">
-                    <button class="button muted" id="prev-page" disabled type="button">السابق</button>
-                    <button class="button muted" id="next-page" disabled type="button">التالي</button>
+            </section>
+            <section id="page-home" class="page" aria-label="الرئيسية">
+                <div class="stats-grid">
+                    <div class="stat-card"><span>إجمالي الطلاب</span><strong id="stat-total">—</strong><small>في قاعدة
+                            البيانات</small></div>
+                    <div class="stat-card"><span>الطلاب المستمرون</span><strong id="stat-active">—</strong><small>الحالة
+                            الدراسية</small></div>
+                    <div class="stat-card"><span>متوسط GPA</span><strong id="stat-gpa">—</strong><small>من 4.00</small>
+                    </div>
+                    <div class="stat-card"><span>عدد التخصصات</span><strong id="stat-depts">—</strong><small>المسجلة في
+                            النظام</small></div>
                 </div>
-            </div>
-        </section>
+                <div class="panel">
+                    <div class="panel-heading">
+                        <h3>أحدث الطلاب المسجلين</h3><button class="btn btn-secondary btn-small" type="button"
+                            data-go="students">عرض جميع الطلاب</button>
+                    </div>
+                    <div id="recent-students" class="recent-list">جاري التحميل...</div>
+                </div>
+            </section>
 
-        <footer>مشروع تدريبي لإدارة بيانات الطلاب — للاستخدام المحلي أو التعليمي</footer>
-    </main>
+            <section id="page-reports" class="page" aria-label="التقارير">
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h3>تقارير الطلاب</h3>
+                            <p>توزيع الطلاب حسب التخصص والحالة الأكاديمية</p>
+                        </div><button id="export-csv" class="btn btn-primary" type="button"><svg>
+                                <use href="#i-download" />
+                            </svg> تصدير CSV</button>
+                    </div>
+                    <div class="report-grid">
+                        <div>
+                            <h4>الطلاب حسب التخصص</h4>
+                            <div id="department-report" class="report-bars"></div>
+                        </div>
+                        <div>
+                            <h4>الطلاب حسب الحالة</h4>
+                            <div id="status-report" class="report-bars"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-settings" class="page" aria-label="الإعدادات">
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h3>حالة الخادم والاتصال</h3>
+                            <p>فحص FastAPI وMySQL من خلال واجهة النظام</p>
+                        </div>
+                    </div>
+                    <div class="settings-stack">
+                        <p><strong>مسار API:</strong> <code>/api/students</code></p>
+                        <p><strong>اختبار الخادم:</strong> <code>/health</code></p>
+                        <p id="connection-result">اضغط زر التحقق لفحص استجابة FastAPI.</p><button id="test-connection"
+                            class="btn btn-primary" type="button">فحص الاتصال الآن</button><a class="external-link"
+                            href="/docs" target="_blank" rel="noopener">فتح توثيق Swagger API ↗</a>
+                    </div>
+                </div>
+            </section>
+            <footer class="footer"><span>نظام إدارة بيانات الطلاب</span><span>مشروع أكاديمي · FastAPI + MySQL</span>
+            </footer>
+        </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <dialog id="student-dialog">
+        <div class="dialog-header">
+            <h3>تفاصيل الطالب</h3><button id="close-dialog" type="button" class="icon-button" aria-label="إغلاق"><svg>
+                    <use href="#i-close" />
+                </svg></button>
+        </div>
+        <div id="student-details" class="details-grid"></div>
+        <div class="dialog-footer"><button class="btn btn-secondary" id="dialog-done" type="button">إغلاق</button></div>
+    </dialog>
 </body>
 
 </html>

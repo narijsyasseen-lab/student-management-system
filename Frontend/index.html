@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
     <title>نظام إدارة بيانات الطلاب</title>
-    <link rel="stylesheet" href="style.css?v=20261024" />
-    <script src="script.js?v=20261024" defer></script>
+    <link rel="stylesheet" href="style.css?v=screenfit1024" />
+    <script src="script.js?v=screenfit1024" defer></script>
 </head>
 
 <body>
@@ -169,6 +169,8 @@
                     <div class="section-label"><svg>
                             <use href="#i-users" />
                         </svg><span id="form-heading">البيانات الأكاديمية والشخصية</span></div>
+                    <div id="step-indicator" class="step-indicator" hidden><strong id="step-title">البيانات
+                            الأساسية</strong><span id="step-count">الخطوة 1 من 2</span></div>
                     <p class="form-hint">الحقول التي تحمل علامة <b>*</b> مطلوبة</p>
                     <form id="student-form">
                         <div class="form-grid">
@@ -219,7 +221,8 @@
                         <div class="form-actions"><button id="save-button" class="btn btn-primary" type="submit"><svg>
                                     <use href="#i-save" />
                                 </svg><span>إضافة الطالب</span></button>
-                            <div class="action-left"><button id="cancel-button" class="btn btn-ghost hidden"
+                            <div class="action-left"><button id="prev-step" class="btn btn-secondary" type="button"
+                                    hidden>السابق</button><button id="cancel-button" class="btn btn-ghost hidden"
                                     type="button">إلغاء التعديل</button><button id="reset-button"
                                     class="btn btn-secondary" type="reset"><svg>
                                         <use href="#i-reset" />
@@ -355,7 +358,7 @@
                         <p><strong>اختبار الخادم:</strong> <code>/health</code></p>
                         <p id="connection-result">اضغط زر التحقق لفحص استجابة FastAPI.</p><button id="test-connection"
                             class="btn btn-primary" type="button">فحص الاتصال الآن</button><a class="external-link"
-                            href="/docs" target="_blank" rel="noopener">فتح توثيق Swagger API ↗️</a>
+                            href="/docs" target="_blank" rel="noopener">فتح توثيق Swagger API ↗</a>
                     </div>
                 </div>
             </section>

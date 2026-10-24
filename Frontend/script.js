@@ -1,3 +1,8 @@
+/*
+ * Student Management System — واجهة RTL متصلة بـ FastAPI.
+ * الخادم الحالي: GET/POST/PUT/DELETE /api/students وGET /health.
+ * ملاحظة: يجب إضافة gpa وstatus إلى Backend لكي يتم حفظهما في MySQL.
+ */
 "use strict";
 
 const API = "/api/students";
@@ -14,7 +19,6 @@ let currentPage = 0;
 let editId = null;
 let isLoading = false;
 let toastTimer = null;
-let searchTimer;
 
 const STAGE_NAMES = {
   1: "الأولى",
@@ -27,42 +31,23 @@ const STAGE_NAMES = {
 
 const PAGE_TEXT = {
   home: ["الرئيسية", "ملخص السجل الأكاديمي وإحصاءات الطلاب"],
-  add: ["إضافة طالب جديد", "يرجى تعبئة البيانات التالية لإضافة طالب جديد إلى النظام"],
-  students: ["قائمة الطلاب", "استعراض السجلات والبحث والتصفية والتعديل والحذف"],
-  reports: ["التقارير والإحصاءات", "نظرة عامة على التخصصات والحالة الأكاديمية"],
-  settings: ["الإعدادات والاتصال", "تعرّف على حالة الاتصال بالخادم وروابط واجهة API"],
+  add: [
+    "إضافة طالب جديد",
+    "يرجى تعبئة البيانات التالية لإضافة طالب جديد إلى النظام",
+  ],
+  students: [
+    "قائمة الطلاب",
+    "استعراض السجلات والبحث والتصفية والتعديل والحذف",
+  ],
+  reports: [
+    "التقارير والإحصاءات",
+    "نظرة عامة على التخصصات والحالة الأكاديمية",
+  ],
+  settings: [
+    "الإعدادات والاتصال",
+    "تعرّف على حالة الاتصال بالخادم وروابط واجهة API",
+  ],
 };
-
-function safeText(value) {
-  return value === null || value === undefined || value === ""
-    ? "—"
-    : String(value);
-}
-
-function statusName(status) {
-  return status || "غير محدد";
-}
-
-function statusStyle(status) {
-  const styles = {
-    مستمر: "status-active",
-    متخرج: "status-graduated",
-    موقوف: "status-suspended",
-    منسحب: "status-withdrawn",
-  };
-
-  return styles[status] || "status-unknown";
-}
-
-function stageName(stage) {
-  return STAGE_NAMES[Number(stage)] || String(stage || "—");
-}
-
-function gpaName(gpa) {
-  return gpa === null || gpa === undefined || gpa === ""
-    ? "—"
-    : Number(gpa).toFixed(2);
-}
 
 async function request(path, options = {}) {
   const headers = {
@@ -98,10 +83,10 @@ async function request(path, options = {}) {
 
     if (Array.isArray(detail)) {
       detail = detail
-        .map((error) => {
-          const location = (error.loc || []).slice(1).join(".");
-          return `${location}: ${error.msg}`;
-        })
+        .map(
+          (error) =>
+            `${(error.loc || []).slice(1).join(".")}: ${error.msg}`
+        )
         .join(" | ");
     }
 
@@ -124,12 +109,9 @@ function notify(text, type = "success") {
 
   clearTimeout(toastTimer);
 
-  toastTimer = setTimeout(
-    () => {
-      element.hidden = true;
-    },
-    type === "warning" ? 9000 : 6000
-  );
+  toastTimer = setTimeout(() => {
+    element.hidden = true;
+  }, type === "warning" ? 9000 : 6000);
 }
 
 function icon(name) {
@@ -149,18 +131,41 @@ function icon(name) {
   return svg;
 }
 
+// التنقل بين كل صفحات القائمة حتى لو تعذر اتصال الـ API.
+function closeMobileMenu() {
+  $("sidebar")?.classList.remove("open");
+
+  if ($("sidebar-overlay")) {
+    $("sidebar-overlay").hidden = true;
+  }
+
+  $("menu-toggle")?.setAttribute("aria-expanded", "false");
+  $("menu-toggle")?.setAttribute("aria-label", "فتح القائمة");
+}
+
 function go(page) {
   if (!(page in PAGE_TEXT)) {
     page = "add";
   }
 
-  document.querySelectorAll(".page").forEach((element) => {
-    element.classList.toggle("active", element.id === `page-${page}`);
-  });
+  for (const section of document.querySelectorAll(".page")) {
+    const active = section.id === `page-${page}`;
 
-  document.querySelectorAll(".nav-link").forEach((element) => {
-    element.classList.toggle("active", element.dataset.go === page);
-  });
+    section.classList.toggle("active", active);
+    section.hidden = !active;
+  }
+
+  for (const link of document.querySelectorAll(".nav-link")) {
+    const active = link.dataset.go === page;
+
+    link.classList.toggle("active", active);
+
+    if (active) {
+      link.setAttribute("aria-current", "page");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  }
 
   if ($("hero-title")) {
     $("hero-title").textContent = PAGE_TEXT[page][0];
@@ -170,17 +175,23 @@ function go(page) {
     $("hero-description").textContent = PAGE_TEXT[page][1];
   }
 
-  $("sidebar")?.classList.remove("open");
+  closeMobileMenu();
 
-  if ($("sidebar-overlay")) {
-    $("sidebar-overlay").hidden = true;
+  if (window.location.hash !== `#${page}`) {
+    window.location.hash = page;
   }
 
-  window.location.hash = page;
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({
+    top: 0,
+    behavior: "instant",
+  });
 
   if (page === "home") {
     renderDashboard();
+  }
+
+  if (page === "students") {
+    renderTable();
   }
 
   if (page === "reports") {
@@ -188,28 +199,93 @@ function go(page) {
   }
 }
 
-function setConnection(connected) {
-  if ($("sidebar-status")) {
-    $("sidebar-status").textContent = connected
-      ? "الاتصال بالخادم متاح"
-      : "تعذر الاتصال بالخادم";
-  }
+for (const control of document.querySelectorAll("[data-go]")) {
+  control.addEventListener("click", () => {
+    if (control.dataset.go === "add" && editId === null) {
+      resetForm();
+    }
 
-  document
-    .querySelector(".online-dot")
-    ?.classList.toggle("offline", !connected);
+    go(control.dataset.go);
+  });
 }
 
-function makeEmptyRow(message) {
-  const row = document.createElement("tr");
-  const cell = document.createElement("td");
+$("menu-toggle")?.addEventListener("click", () => {
+  const sidebar = $("sidebar");
+  const overlay = $("sidebar-overlay");
+  const menuToggle = $("menu-toggle");
 
-  cell.colSpan = 7;
-  cell.className = "empty-state";
-  cell.textContent = message;
+  if (!sidebar) {
+    return;
+  }
 
-  row.appendChild(cell);
-  return row;
+  const isOpen = sidebar.classList.toggle("open");
+
+  if (overlay) {
+    overlay.hidden = !isOpen;
+  }
+
+  menuToggle?.setAttribute("aria-expanded", String(isOpen));
+  menuToggle?.setAttribute(
+    "aria-label",
+    isOpen ? "إغلاق القائمة" : "فتح القائمة"
+  );
+});
+
+$("sidebar-overlay")?.addEventListener("click", closeMobileMenu);
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeMobileMenu();
+  }
+});
+
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 1050) {
+    closeMobileMenu();
+  }
+});
+
+window.addEventListener("hashchange", () => {
+  const next = window.location.hash.slice(1);
+
+  if (
+    next in PAGE_TEXT &&
+    !$(`page-${next}`)?.classList.contains("active")
+  ) {
+    go(next);
+  }
+});
+
+function stageName(stage) {
+  return STAGE_NAMES[Number(stage)] || String(stage || "—");
+}
+
+function gpaName(gpa) {
+  return gpa === null || gpa === undefined || gpa === ""
+    ? "—"
+    : Number(gpa).toFixed(2);
+}
+
+function statusName(status) {
+  return status || "غير محدد";
+}
+
+function statusStyle(status) {
+  if (status === "مؤجل") {
+    return "muted";
+  }
+
+  if (status === "منسحب") {
+    return "inactive";
+  }
+
+  return "";
+}
+
+function safeText(value) {
+  return value === null || value === undefined || value === ""
+    ? "—"
+    : String(value);
 }
 
 async function loadStudents({ quiet = false } = {}) {
@@ -266,7 +342,9 @@ async function loadStudents({ quiet = false } = {}) {
     setConnection(true);
   } catch (error) {
     if ($("students-body")) {
-      $("students-body").replaceChildren(makeEmptyRow(error.message));
+      $("students-body").replaceChildren(
+        makeEmptyRow(error.message)
+      );
     }
 
     setConnection(false);
@@ -274,6 +352,18 @@ async function loadStudents({ quiet = false } = {}) {
   } finally {
     isLoading = false;
   }
+}
+
+function setConnection(connected) {
+  if ($("sidebar-status")) {
+    $("sidebar-status").textContent = connected
+      ? "الاتصال بالخادم متاح"
+      : "تعذر الاتصال بالخادم";
+  }
+
+  document
+    .querySelector(".online-dot")
+    ?.classList.toggle("offline", !connected);
 }
 
 function populateDepartments() {
@@ -300,7 +390,9 @@ function populateDepartments() {
   });
 
   if (
-    [...select.options].some((option) => option.value === oldValue)
+    [...select.options].some(
+      (option) => option.value === oldValue
+    )
   ) {
     select.value = oldValue;
   }
@@ -335,6 +427,10 @@ function applyFilters() {
     ? search.value.trim().toLocaleLowerCase("ar")
     : "";
 
+  const departmentValue = department?.value || "";
+  const stageValue = stage?.value || "";
+  const statusValue = status?.value || "";
+
   displayedStudents = allStudents.filter((student) => {
     const matchesSearch =
       !needle ||
@@ -346,11 +442,11 @@ function applyFilters() {
 
     return (
       matchesSearch &&
-      (!department?.value ||
-        student.department === department.value) &&
-      (!stage?.value ||
-        Number(student.stage) === Number(stage.value)) &&
-      (!status?.value || student.status === status.value)
+      (!departmentValue ||
+        student.department === departmentValue) &&
+      (!stageValue ||
+        Number(student.stage) === Number(stageValue)) &&
+      (!statusValue || student.status === statusValue)
     );
   });
 
@@ -363,14 +459,33 @@ function applyFilters() {
   renderTable();
 }
 
+function makeEmptyRow(message) {
+  const row = document.createElement("tr");
+  const cell = document.createElement("td");
+
+  cell.colSpan = 7;
+  cell.className = "empty-state";
+  cell.textContent = message;
+
+  row.appendChild(cell);
+  return row;
+}
+
 function tableCell(row, value) {
   const cell = document.createElement("td");
+
   cell.textContent = safeText(value);
   row.appendChild(cell);
+
   return cell;
 }
 
-function actionButton(name, title, callback, extraClass = "") {
+function actionButton(
+  name,
+  title,
+  callback,
+  extraClass = ""
+) {
   const button = document.createElement("button");
 
   button.type = "button";
@@ -392,8 +507,10 @@ function renderTable() {
 
   tbody.replaceChildren();
 
-  const start = currentPage * PER_PAGE;
-  const pageData = displayedStudents.slice(start, start + PER_PAGE);
+  const pageData = displayedStudents.slice(
+    currentPage * PER_PAGE,
+    (currentPage + 1) * PER_PAGE
+  );
 
   if (!pageData.length) {
     tbody.appendChild(
@@ -415,7 +532,9 @@ function renderTable() {
     const statusCell = document.createElement("td");
     const statusSpan = document.createElement("span");
 
-    statusSpan.className = `badge-status ${statusStyle(student.status)}`;
+    statusSpan.className = `badge-status ${statusStyle(
+      student.status
+    )}`;
     statusSpan.textContent = statusName(student.status);
 
     statusCell.appendChild(statusSpan);
@@ -425,9 +544,18 @@ function renderTable() {
     const actions = document.createElement("div");
 
     actions.className = "table-actions";
+
     actions.append(
-      actionButton("eye", "عرض التفاصيل", () => showStudent(student)),
-      actionButton("edit", "تعديل الطالب", () => startEdit(student)),
+      actionButton(
+        "eye",
+        "عرض التفاصيل",
+        () => showStudent(student)
+      ),
+      actionButton(
+        "edit",
+        "تعديل الطالب",
+        () => startEdit(student)
+      ),
       actionButton(
         "trash",
         "حذف الطالب",
@@ -461,23 +589,33 @@ function renderTable() {
   }
 
   if ($("next-page")) {
-    $("next-page").disabled = currentPage + 1 >= totalPages;
+    $("next-page").disabled =
+      currentPage + 1 >= totalPages;
   }
 }
 
 function resetForm() {
+  if (!form) {
+    return;
+  }
+
   form.reset();
   editId = null;
 
-  $("form-heading").textContent = "البيانات الأكاديمية والشخصية";
-  $("save-button").lastElementChild.textContent = "إضافة الطالب";
+  $("form-heading").textContent =
+    "البيانات الأكاديمية والشخصية";
+  $("save-button").lastElementChild.textContent =
+    "إضافة الطالب";
   $("cancel-button").classList.add("hidden");
 }
 
 function readForm() {
   const data = Object.fromEntries(new FormData(form));
 
-  data.student_number = String(data.student_number || "").trim();
+  data.student_number = String(
+    data.student_number || ""
+  ).trim();
+
   data.full_name = String(data.full_name || "").trim();
   data.department = String(data.department || "").trim();
   data.stage = Number(data.stage);
@@ -506,44 +644,73 @@ function startEdit(student) {
 
     if (element) {
       element.value =
-        student[field] ?? (field === "status" ? "مستمر" : "");
+        student[field] ??
+        (field === "status" ? "مستمر" : "");
     }
   });
 
   $("form-heading").textContent =
     `تعديل بيانات الطالب #${student.id}`;
-  $("save-button").lastElementChild.textContent = "حفظ التعديلات";
+  $("save-button").lastElementChild.textContent =
+    "حفظ التعديلات";
   $("cancel-button").classList.remove("hidden");
 
   go("add");
+
   $("form-section")?.scrollIntoView({
     behavior: "smooth",
     block: "start",
   });
 }
 
-async function deleteStudent(student) {
-  if (
-    !window.confirm(
-      `هل تريد حذف الطالب «${student.full_name}» نهائياً؟`
-    )
-  ) {
+form?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!form.reportValidity()) {
     return;
   }
 
+  const button = $("save-button");
+  const editing = editId !== null;
+  const payload = readForm();
+
+  button.disabled = true;
+
   try {
-    await request(`${API}/${student.id}`, { method: "DELETE" });
+    const saved = await request(
+      editing ? `${API}/${editId}` : API,
+      {
+        method: editing ? "PUT" : "POST",
+        body: JSON.stringify(payload),
+      }
+    );
 
-    if (editId === student.id) {
-      resetForm();
-    }
-
+    resetForm();
     await loadStudents({ quiet: true });
-    notify("تم حذف الطالب بنجاح.");
+    go("students");
+
+    if (
+      !saved ||
+      !("gpa" in saved) ||
+      !("status" in saved)
+    ) {
+      notify(
+        "تم حفظ البيانات الأساسية، لكن GPA والحالة لم يرجعهما الخادم. يجب تحديث Backend لحفظهما في MySQL.",
+        "warning"
+      );
+    } else {
+      notify(
+        editing
+          ? "تم حفظ تعديل بيانات الطالب بنجاح."
+          : "تمت إضافة الطالب بنجاح."
+      );
+    }
   } catch (error) {
-    notify(`تعذر حذف الطالب: ${error.message}`, "error");
+    notify(`تعذر حفظ الطالب: ${error.message}`, "error");
+  } finally {
+    button.disabled = false;
   }
-}
+});
 
 function showStudent(student) {
   const details = $("student-details");
@@ -580,6 +747,114 @@ function showStudent(student) {
   $("student-dialog")?.showModal();
 }
 
+async function deleteStudent(student) {
+  const confirmed = window.confirm(
+    `هل تريد حذف الطالب «${student.full_name}» نهائياً؟`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await request(`${API}/${student.id}`, {
+      method: "DELETE",
+    });
+
+    if (editId === student.id) {
+      resetForm();
+    }
+
+    await loadStudents({ quiet: true });
+    notify("تم حذف الطالب بنجاح.");
+  } catch (error) {
+    notify(`تعذر حذف الطالب: ${error.message}`, "error");
+  }
+}
+
+let searchTimer;
+
+$("search")?.addEventListener("input", () => {
+  clearTimeout(searchTimer);
+
+  searchTimer = setTimeout(() => {
+    currentPage = 0;
+    applyFilters();
+  }, 250);
+});
+
+for (const id of [
+  "filter-department",
+  "filter-stage",
+  "filter-status",
+]) {
+  $(id)?.addEventListener("change", () => {
+    currentPage = 0;
+    applyFilters();
+  });
+}
+
+$("clear-filters")?.addEventListener("click", () => {
+  if ($("search")) {
+    $("search").value = "";
+  }
+
+  for (const name of [
+    "filter-department",
+    "filter-stage",
+    "filter-status",
+  ]) {
+    if ($(name)) {
+      $(name).value = "";
+    }
+  }
+
+  currentPage = 0;
+  applyFilters();
+});
+
+$("prev-page")?.addEventListener("click", () => {
+  if (currentPage > 0) {
+    currentPage--;
+    renderTable();
+  }
+});
+
+$("next-page")?.addEventListener("click", () => {
+  if (
+    (currentPage + 1) * PER_PAGE <
+    displayedStudents.length
+  ) {
+    currentPage++;
+    renderTable();
+  }
+});
+
+$("new-student")?.addEventListener("click", () => {
+  resetForm();
+  go("add");
+});
+
+$("cancel-button")?.addEventListener("click", resetForm);
+
+$("reset-button")?.addEventListener("click", () => {
+  editId = null;
+
+  $("cancel-button").classList.add("hidden");
+  $("form-heading").textContent =
+    "البيانات الأكاديمية والشخصية";
+  $("save-button").lastElementChild.textContent =
+    "إضافة الطالب";
+});
+
+$("close-dialog")?.addEventListener("click", () => {
+  $("student-dialog")?.close();
+});
+
+$("dialog-done")?.addEventListener("click", () => {
+  $("student-dialog")?.close();
+});
+
 function renderDashboard() {
   if ($("stat-total")) {
     $("stat-total").textContent = allStudents.length;
@@ -612,9 +887,84 @@ function renderDashboard() {
 
   if ($("stat-depts")) {
     $("stat-depts").textContent = new Set(
-      allStudents.map((student) => student.department).filter(Boolean)
+      allStudents
+        .map((student) => student.department)
+        .filter(Boolean)
     ).size;
   }
+
+  const recent = $("recent-students");
+
+  if (!recent) {
+    return;
+  }
+
+  recent.replaceChildren();
+
+  if (!allStudents.length) {
+    recent.textContent = "لا توجد سجلات حالياً.";
+    return;
+  }
+
+  const recentStudents = [...allStudents]
+    .sort((a, b) => Number(b.id) - Number(a.id))
+    .slice(0, 5);
+
+  for (const student of recentStudents) {
+    const row = document.createElement("div");
+    row.className = "recent-row";
+
+    const avatar = document.createElement("span");
+    avatar.className = "recent-avatar";
+    avatar.textContent = (student.full_name || "ط").slice(0, 1);
+
+    const text = document.createElement("div");
+
+    const name = document.createElement("strong");
+    name.textContent = student.full_name;
+
+    const detail = document.createElement("p");
+    detail.textContent =
+      `${student.department} · ${stageName(student.stage)} · ${student.student_number}`;
+
+    text.append(name, detail);
+
+    const view = document.createElement("button");
+    view.className = "btn btn-secondary btn-small";
+    view.type = "button";
+    view.textContent = "التفاصيل";
+    view.addEventListener("click", () => showStudent(student));
+
+    row.append(avatar, text, view);
+    recent.appendChild(row);
+  }
+}
+
+function reportBar(container, title, count, max) {
+  const div = document.createElement("div");
+
+  const top = document.createElement("div");
+  top.className = "report-item-top";
+
+  const label = document.createElement("span");
+  label.textContent = title;
+
+  const number = document.createElement("strong");
+  number.textContent = String(count);
+
+  top.append(label, number);
+
+  const track = document.createElement("div");
+  track.className = "bar-track";
+
+  const fill = document.createElement("div");
+  fill.className = "bar-fill";
+  fill.style.width =
+    `${(count / Math.max(1, max)) * 100}%`;
+
+  track.appendChild(fill);
+  div.append(top, track);
+  container.appendChild(div);
 }
 
 function renderReports() {
@@ -628,41 +978,37 @@ function renderReports() {
   departmentReport.replaceChildren();
   statusReport.replaceChildren();
 
-  const groupBy = (key) =>
-    allStudents.reduce((result, student) => {
+  const group = (key) =>
+    allStudents.reduce((map, student) => {
       const value = student[key] || "غير محدد";
-      result[value] = (result[value] || 0) + 1;
-      return result;
+      map[value] = (map[value] || 0) + 1;
+      return map;
     }, {});
 
-  const renderGroup = (container, groups) => {
+  const reports = [
+    [departmentReport, group("department")],
+    [statusReport, group("status")],
+  ];
+
+  for (const [container, groups] of reports) {
     const entries = Object.entries(groups).sort(
       (a, b) => b[1] - a[1]
     );
 
+    container.classList.remove("report-empty");
+
     if (!entries.length) {
       container.textContent = "لا توجد بيانات لعرض التقرير";
-      return;
+      container.classList.add("report-empty");
+      continue;
     }
 
     const max = entries[0][1];
 
     for (const [name, count] of entries) {
-      const item = document.createElement("div");
-      item.className = "report-item";
-
-      item.textContent = `${name}: ${count}`;
-      item.style.setProperty(
-        "--percentage",
-        `${(count / Math.max(1, max)) * 100}%`
-      );
-
-      container.appendChild(item);
+      reportBar(container, name, count, max);
     }
-  };
-
-  renderGroup(departmentReport, groupBy("department"));
-  renderGroup(statusReport, groupBy("status"));
+  }
 }
 
 function downloadCsv() {
@@ -697,7 +1043,7 @@ function downloadCsv() {
           .map(
             (value) =>
               `"${String(value ?? "")
-                .replace(/^[=+@-\t\r]/, "'$&")
+                .replace(/^[=+@\-\t\r]/, "'$&")
                 .replace(/"/g, '""')}"`
           )
           .join(",")
@@ -705,190 +1051,67 @@ function downloadCsv() {
       .join("\r\n");
 
   const url = URL.createObjectURL(
-    new Blob([csv], { type: "text/csv;charset=utf-8" })
+    new Blob([csv], {
+      type: "text/csv;charset=utf-8",
+    })
   );
 
   const link = document.createElement("a");
   link.href = url;
   link.download = "students_report.csv";
+
   document.body.appendChild(link);
   link.click();
   link.remove();
 
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
-
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  if (!form.reportValidity()) {
-    return;
-  }
-
-  const button = $("save-button");
-  const editing = editId !== null;
-  const payload = readForm();
-
-  button.disabled = true;
-
-  try {
-    const saved = await request(
-      editing ? `${API}/${editId}` : API,
-      {
-        method: editing ? "PUT" : "POST",
-        body: JSON.stringify(payload),
-      }
-    );
-
-    resetForm();
-    await loadStudents({ quiet: true });
-    go("students");
-
-    if (
-      !saved ||
-      !("gpa" in saved) ||
-      !("status" in saved)
-    ) {
-      notify(
-        "تم حفظ البيانات الأساسية، لكن GPA والحالة لم يرجعهما الخادم.",
-        "warning"
-      );
-    } else {
-      notify(
-        editing
-          ? "تم حفظ تعديل بيانات الطالب بنجاح."
-          : "تمت إضافة الطالب بنجاح."
-      );
-    }
-  } catch (error) {
-    notify(`تعذر حفظ الطالب: ${error.message}`, "error");
-  } finally {
-    button.disabled = false;
-  }
-});
-
-document.querySelectorAll("[data-go]").forEach((button) => {
-  button.addEventListener("click", () => {
-    if (button.dataset.go === "add" && editId === null) {
-      resetForm();
-    }
-
-    go(button.dataset.go);
-  });
-});
-
-$("menu-toggle")?.addEventListener("click", () => {
-  $("sidebar")?.classList.toggle("open");
-
-  if ($("sidebar-overlay")) {
-    $("sidebar-overlay").hidden = !$("sidebar")?.classList.contains("open");
-  }
-});
-
-$("sidebar-overlay")?.addEventListener("click", () => {
-  $("sidebar")?.classList.remove("open");
-  $("sidebar-overlay").hidden = true;
-});
-
-window.addEventListener("hashchange", () => {
-  const page = window.location.hash.slice(1);
-
-  if (
-    page in PAGE_TEXT &&
-    !$(`page-${page}`)?.classList.contains("active")
-  ) {
-    go(page);
-  }
-});
-
-$("search")?.addEventListener("input", () => {
-  clearTimeout(searchTimer);
-
-  searchTimer = setTimeout(() => {
-    currentPage = 0;
-    applyFilters();
-  }, 250);
-});
-
-["filter-department", "filter-stage", "filter-status"].forEach((id) => {
-  $(id)?.addEventListener("change", () => {
-    currentPage = 0;
-    applyFilters();
-  });
-});
-
-$("clear-filters")?.addEventListener("click", () => {
-  $("search").value = "";
-
-  ["filter-department", "filter-stage", "filter-status"].forEach(
-    (id) => {
-      $(id).value = "";
-    }
-  );
-
-  currentPage = 0;
-  applyFilters();
-});
-
-$("prev-page")?.addEventListener("click", () => {
-  if (currentPage > 0) {
-    currentPage--;
-    renderTable();
-  }
-});
-
-$("next-page")?.addEventListener("click", () => {
-  if ((currentPage + 1) * PER_PAGE < displayedStudents.length) {
-    currentPage++;
-    renderTable();
-  }
-});
-
-$("new-student")?.addEventListener("click", () => {
-  resetForm();
-  go("add");
-});
-
-$("cancel-button")?.addEventListener("click", resetForm);
-
-$("reset-button")?.addEventListener("click", resetForm);
-
-$("close-dialog")?.addEventListener("click", () => {
-  $("student-dialog")?.close();
-});
-
-$("dialog-done")?.addEventListener("click", () => {
-  $("student-dialog")?.close();
-});
 
 $("export-csv")?.addEventListener("click", downloadCsv);
 
-$("test-connection")?.addEventListener("click", async () => {
+async function testConnection() {
   const result = $("connection-result");
 
-  if (result) {
-    result.textContent = "جاري فحص الخادم...";
+  if (!result) {
+    return;
   }
+
+  result.textContent = "جاري فحص الخادم...";
 
   try {
     const data = await request("/health");
 
-    if (result) {
-      result.textContent =
-        data.status === "ok"
-          ? "الخادم يستجيب بصورة صحيحة (FastAPI)."
-          : "الخادم يستجيب، لكن حالة /health غير متوقعة.";
-    }
+    result.textContent =
+      data.status === "ok"
+        ? "✅ الخادم يستجيب بصورة صحيحة (FastAPI)."
+        : "الخادم يستجيب، لكن حالة /health غير متوقعة.";
 
     setConnection(true);
   } catch (error) {
-    if (result) {
-      result.textContent = `فشل الاتصال: ${error.message}`;
-    }
-
+    result.textContent = `❌ ${error.message}`;
     setConnection(false);
   }
-});
+}
 
-go((window.location.hash || "#add").slice(1));
-loadStudents();
+$("test-connection")?.addEventListener(
+  "click",
+  testConnection
+);
+
+try {
+  go((window.location.hash || "#add").slice(1));
+  loadStudents();
+} catch (error) {
+  console.error("Frontend initialization error:", error);
+
+  const banner = $("toast");
+
+  if (banner) {
+    banner.textContent =
+      "يوجد خطأ في تشغيل الواجهة: " + error.message;
+    banner.className = "toast error";
+    banner.hidden = false;
+  }
+}

@@ -3,11 +3,11 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
     <title>نظام إدارة بيانات الطلاب</title>
-    <link rel="stylesheet" href="style.css" />
-    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="style.css?v=20261024" />
+    <script src="script.js?v=20261024" defer></script>
 </head>
 
 <body>
@@ -90,14 +90,15 @@
                 </svg></div>
             <div>
                 <h1>نظام إدارة بيانات الطلاب</h1>
-                <p>Student Management System · FastAPI + MySQL</p>
+                <p>Student Management System </p>
             </div>
         </div>
         <div class="topbar-left">
             <div class="admin-user"><span class="admin-avatar"><svg>
                         <use href="#i-users" />
                     </svg></span><span>مرحباً، إدارة النظام</span></div>
-            <button id="menu-toggle" class="mobile-menu icon-button" type="button" aria-label="فتح القائمة"><svg>
+            <button id="menu-toggle" class="mobile-menu icon-button" type="button" aria-label="فتح القائمة"
+                aria-expanded="false" aria-controls="sidebar"><svg>
                     <use href="#i-menu" />
                 </svg></button>
         </div>
@@ -112,7 +113,6 @@
             <button class="nav-link active" type="button" data-go="add"><svg>
                     <use href="#i-add" />
                 </svg><span>إضافة طالب جديد</span><span class="nav-arrow">‹</span></button>
-
             <button class="nav-link" type="button" data-go="students"><svg>
                     <use href="#i-list" />
                 </svg><span>قائمة الطلاب</span></button>
@@ -195,7 +195,6 @@
                                         <option value="5">الخامسة</option>
                                         <option value="6">السادسة</option>
                                     </select></span></label>
-
                             <label class="field"><span>المعدل التراكمي GPA (من 4)</span><span class="control"><svg>
                                         <use href="#i-chart" />
                                     </svg><input id="gpa" name="gpa" type="number" min="0" max="4" step="0.01"
@@ -299,6 +298,7 @@
                     </div>
                 </div>
             </section>
+
             <section id="page-home" class="page" aria-label="الرئيسية">
                 <div class="stats-grid">
                     <div class="stat-card"><span>إجمالي الطلاب</span><strong id="stat-total">—</strong><small>في قاعدة
@@ -355,7 +355,7 @@
                         <p><strong>اختبار الخادم:</strong> <code>/health</code></p>
                         <p id="connection-result">اضغط زر التحقق لفحص استجابة FastAPI.</p><button id="test-connection"
                             class="btn btn-primary" type="button">فحص الاتصال الآن</button><a class="external-link"
-                            href="/docs" target="_blank" rel="noopener">فتح توثيق Swagger API ↗</a>
+                            href="/docs" target="_blank" rel="noopener">فتح توثيق Swagger API ↗️</a>
                     </div>
                 </div>
             </section>
@@ -365,6 +365,9 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <noscript>
+        <div class="noscript-warning">يلزم تفعيل JavaScript حتى تعمل القائمة وإضافة الطلاب والبحث.</div>
+    </noscript>
     <dialog id="student-dialog">
         <div class="dialog-header">
             <h3>تفاصيل الطالب</h3><button id="close-dialog" type="button" class="icon-button" aria-label="إغلاق"><svg>

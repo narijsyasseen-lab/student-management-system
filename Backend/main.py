@@ -12,114 +12,246 @@ ROOT = Path(__file__).resolve().parent
 FRONTEND = ROOT.parent / "frontend"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-# إنشاء جدول students تلقائياً إذا لم يكن موجوداً؛ قاعدة MySQL نفسها يجب إنشاؤها مسبقاً.
+    # إنشاء جدول students تلقائياً إذا لم يكن موجوداً.
+    # قاعدة MySQL نفسها يجب أن تكون منشأة مسبقاً.
     Base.metadata.create_all(bind=engine)
     yield
 app = FastAPI(
-title="Student Management API | نظام إدارة بيانات الطلاب",
-description="واجهة REST API لإضافة الطلاب وعرضهم والبحث والتعديل والحذف.",
-version="1.0.0",
-lifespan=lifespan,
+    title="Student Management API | نظام إدارة بيانات الطلاب",
+    description="واجهة REST API لإضافة الطلاب وعرضهم والبحث والتعديل والحذف.",
+    version="1.0.0",
+    lifespan=lifespan,
 )
-# نفس الخادم يقدم ملفات CSS وJavaScript، لذا لا حاجة لإعداد CORS منفصل.
-#عدلت هذه سطر حتى اجرب كود في swagger
-#app.mount("/static", StaticFiles(directory=FRONTEND), name="static")
-# تشغيل ملفات الواجهة فقط إذا كان المجلد موجودًا
+# تشغيل ملفات الواجهة إذا كان مجلد frontend موجوداً.
 if FRONTEND.is_dir():
-   app.mount(
-       "/static",
-       StaticFiles(directory=FRONTEND)
-       ,name="static")
-#هنا ايضا اقوم بتعديل هذا السطر حتى اجرب كود في swagger
-#@app.get("/", include_in_schema=False)def home():return FileResponse(FRONTEND / "index.html")
-# الصفحة الرئيسية لواجهة API
+    app.mount(
+        "/static",
+        StaticFiles(directory=FRONTEND),
+        name="static",
+    )
+
+
 @app.get("/", include_in_schema=False)
 def home():
     return {
-           "message": "Student Management API is running",
-            "swagger": "/docs"
-}
+        "message": "Student Management API is running",
+        "swagger": "/docs",
+    }
+
 
 @app.get("/health", tags=["System"])
 def health():
-#"فحص بسيط لتأكد عمل خادم FastAPI."""
+    """فحص بسيط للتأكد من عمل الخادم."""
     return {"status": "ok"}
 
 
 def require_student(db: Session, student_id: int) -> models.Student:
+    """إرجاع الطالب أو رفع خطأ 404 إذا لم يكن موجوداً."""
     student = crud.get_student(db, student_id)
+
     if student is None:
-       raise HTTPException(status_code=404, detail="الطالب غير موجود")
+        raise HTTPException(
+            status_code=404,
+            detail="الطالب غير موجود",
+        )
+
     return student
 
 
-def prevent_duplicate_number(db: Session, student_number: str, current_id: int | None = None):
-#"منع الرقم الجامعي المتكرر عند الإضافة أو التحديث."""
+def prevent_duplicate_number(
+    db: Session,
+    student_number: str,
+    current_id: int | None = None,
+) -> None:
+    """منع تكرار الرقم الجامعي عند الإضافة أو التحديث."""
     existing = crud.get_student_by_number(db, student_number)
-    if existing and existing.id!= current_id:
-        raise HTTPException(status_code=409, detail="الرقم الجامعي مستخدم لطالب آخر")
+
+    if existing is not None and existing.id != current_id:
+        raise HTTPException(
+            status_code=409,
+            detail="الرقم الجامعي مستخدم لطالب آخر",
+        )
 
 
 def save_or_conflict(db: Session, action):
-#"معالجة خطأ UNIQUE الذي قد يظهر من MySQL عند الطلبات المتزامنة."""
+    """معالجة أخطاء UNIQUE التي قد تحدث عند الطلبات المتزامنة."""
     try:
         return action()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="تعارض في البيانات: قد يكون الرقم الجامعي مكرراً") from None
+        raise HTTPException(
+            status_code=409,
+            detail="تعارض في البيانات: قد يكون الرقم الجامعي مكرراً",
+        ) from None
 
 
-@app.post("/api/students", response_model=StudentRead, status_code=status.HTTP_201_CREATED, tags=["Students"])
-def add_student(data: StudentCreate, db: Session = Depends(get_db)):
-#Create: إضافة طالب جديد."""
-    prevent_duplicate_number(db, data.student_number)
-    return save_or_conflict(db, lambda: crud.create_student(db, data))
-
-
-@app.get("/api/students", response_model=StudentList, tags=["Students"])
-def read_students(
-    search: str | None = Query(default=None, max_length=100, description="الاسم أو الرقم الجامعي"),
-    department: str | None = Query(default=None, max_length=100),
-    stage: int | None = Query(default=None, ge=1, le=6),
-    skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=20, ge=1, le=100),
+@app.post(
+    "/api/students",
+    response_model=StudentRead,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Students"],
+)
+def add_student(
+    data: StudentCreate,
     db: Session = Depends(get_db),
 ):
-#Read: عرض القائمة مع البحث والتصفية والتنقل بين الصفحات."""
-    items, total = crud.list_students(db, search, department, stage, skip, limit)
-    return StudentList(items=items, total=total, skip=skip, limit=limit)
+    """إضافة طالب جديد."""
+    prevent_duplicate_number(db, data.student_number)
+
+    return save_or_conflict(
+        db,
+        lambda: crud.create_student(db, data),
+    )
 
 
-@app.get("/api/students/{student_id}", response_model=StudentRead, tags=["Students"])
-def read_student(student_id: int, db: Session = Depends(get_db)):
-#Read: عرض طالب واحد بواسطة ID."""
-     return require_student(db, student_id)
+@app.get(
+    "/api/students",
+    response_model=StudentList,
+    tags=["Students"],
+)
+def read_students(
+    search: str | None = Query(
+        default=None,
+        max_length=100,
+        description="الاسم أو الرقم الجامعي",
+    ),
+    department: str | None = Query(
+        default=None,
+        max_length=100,
+    ),
+    stage: int | None = Query(
+        default=None,
+        ge=1,
+        le=6,
+    ),
+    skip: int = Query(
+        default=0,
+        ge=0,
+    ),
+    limit: int = Query(
+        default=20,
+        ge=1,
+        le=100,
+    ),
+    db: Session = Depends(get_db),
+):
+    """عرض قائمة الطلاب مع البحث والتصفية والتنقل بين الصفحات."""
+    items, total = crud.list_students(
+        db,
+        search,
+        department,
+        stage,
+        skip,
+        limit,
+    )
+
+    return StudentList(
+        items=items,
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
-@app.put("/api/students/{student_id}", response_model=StudentRead, tags=["Students"])
-def replace_student(student_id: int, data: StudentCreate, db: Session = Depends(get_db)):
-#Update (PUT): استبدال بيانات الطالب كاملة."""
+@app.get(
+    "/api/students/{student_id}",
+    response_model=StudentRead,
+    tags=["Students"],
+)
+def read_student(
+    student_id: int,
+    db: Session = Depends(get_db),
+):
+    """عرض طالب واحد باستخدام المعرّف الداخلي."""
+    return require_student(db, student_id)
+
+
+@app.put(
+    "/api/students/{student_id}",
+    response_model=StudentRead,
+    tags=["Students"],
+)
+def replace_student(
+    student_id: int,
+    data: StudentCreate,
+    db: Session = Depends(get_db),
+):
+    """استبدال بيانات الطالب كاملة."""
     student = require_student(db, student_id)
-    prevent_duplicate_number(db, data.student_number, student_id)
-    return save_or_conflict(db, lambda: crud.update_student(db, student, data.model_dump()))
 
-@app.patch("/api/students/{student_id}", response_model=StudentRead, tags=["Students"])
-def edit_student(student_id: int, data: StudentUpdate, db: Session = Depends(get_db)):
-#Update (PATCH): تعديل حقل أو عدة حقول فقط."""
-     student = require_student(db, student_id)
-     changes = data.model_dump(exclude_unset=True)
-# لا يجوز مسح أي حقل مطلوب في MySQL.
-     for field in ("student_number", "full_name", "department", "stage"):
-           if field in changes and changes[field] is None:
-                raise HTTPException(status_code=422, detail=f"الحقل {field} لا يمكن تركه فارغاً")
-                if "student_number" in changes:
-                    prevent_duplicate_number(db, changes["student_number"], student_id)
-     return save_or_conflict(db, lambda: crud.update_student(db, student, changes))
+    prevent_duplicate_number(
+        db,
+        data.student_number,
+        student_id,
+    )
+
+    return save_or_conflict(
+        db,
+        lambda: crud.update_student(
+            db,
+            student,
+            data.model_dump(),
+        ),
+    )
 
 
-@app.delete("/api/students/{student_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Students"])
-def remove_student(student_id: int, db: Session = Depends(get_db)):
-#Delete: حذف الطالب وإرجاع 204 في حال النجاح."""
+@app.patch(
+    "/api/students/{student_id}",
+    response_model=StudentRead,
+    tags=["Students"],
+)
+def edit_student(
+    student_id: int,
+    data: StudentUpdate,
+    db: Session = Depends(get_db),
+):
+    """تعديل حقل أو عدة حقول فقط."""
+    student = require_student(db, student_id)
+    changes = data.model_dump(exclude_unset=True)
+
+    # لا يجوز مسح الحقول المطلوبة.
+    for field in (
+        "student_number",
+        "full_name",
+        "department",
+        "stage",
+    ):
+        if field in changes and changes[field] is None:
+            raise HTTPException(
+                status_code=422,
+                detail=f"الحقل {field} لا يمكن تركه فارغاً",
+            )
+
+    # يجب أن يكون هذا الشرط خارج حلقة التحقق السابقة.
+    if "student_number" in changes:
+        prevent_duplicate_number(
+            db,
+            changes["student_number"],
+            student_id,
+        )
+
+    return save_or_conflict(
+        db,
+        lambda: crud.update_student(
+            db,
+            student,
+            changes,
+        ),
+    )
+
+@app.delete(
+    "/api/students/{student_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Students"],
+)
+def remove_student(
+    student_id: int,
+    db: Session = Depends(get_db),
+):
+    """حذف الطالب وإرجاع حالة 204 عند النجاح."""
     student = require_student(db, student_id)
     crud.delete_student(db, student)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    return Response(
+        status_code=status.HTTP_204_NO_CONTENT,
+    )

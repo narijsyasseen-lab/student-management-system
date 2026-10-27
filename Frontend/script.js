@@ -4,7 +4,6 @@
  * ملاحظة: يجب إضافة gpa وstatus إلى Backend لكي يتم حفظهما في MySQL.
  */
 "use strict";
-
 const API = "/api/students";
 let PER_PAGE = getPageSize();
 function getPageSize() {

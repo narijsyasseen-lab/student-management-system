@@ -1,80 +1,79 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import DateTime, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
 
 
-# الحصول على الوقت الحالي
-def utc_now():
+def utc_now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
-# إنشاء جدول الطلاب
 class Student(Base):
-
-    # اسم الجدول داخل قاعدة البيانات
     __tablename__ = "students"
 
-    # رقم الطالب التلقائي
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
-        autoincrement=True
+        autoincrement=True,
     )
 
-    # الرقم الجامعي
     student_number: Mapped[str] = mapped_column(
         String(20),
         unique=True,
         nullable=False,
-        index=True
+        index=True,
     )
 
-    # الاسم الكامل
     full_name: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
-        index=True
+        index=True,
     )
 
-    # القسم الدراسي
     department: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
-        index=True
+        index=True,
     )
 
-    # المرحلة الدراسية
     stage: Mapped[int] = mapped_column(
         Integer,
-        nullable=False
+        nullable=False,
     )
 
-    # البريد الإلكتروني
+    gpa: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default="مستمر",
+        server_default="مستمر",
+    )
+
     email: Mapped[str | None] = mapped_column(
         String(255),
-        nullable=True
+        nullable=True,
     )
 
-    # رقم الهاتف
     phone: Mapped[str | None] = mapped_column(
         String(20),
-        nullable=True
+        nullable=True,
     )
 
-    # تاريخ إضافة الطالب
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=utc_now,
-        nullable=False
+        nullable=False,
     )
 
-    # تاريخ آخر تعديل
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=utc_now,
         onupdate=utc_now,
-        nullable=False
+        nullable=False,
     )

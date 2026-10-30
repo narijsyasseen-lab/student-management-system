@@ -97,13 +97,10 @@ def add_student(
 ):
     """إضافة طالب جديد."""
     prevent_duplicate_number(db, data.student_number)
-
     return save_or_conflict(
         db,
         lambda: crud.create_student(db, data),
     )
-
-
 @app.get(
     "/api/students",
     response_model=StudentList,
@@ -144,15 +141,12 @@ def read_students(
         skip,
         limit,
     )
-
     return StudentList(
         items=items,
         total=total,
         skip=skip,
         limit=limit,
     )
-
-
 @app.get(
     "/api/students/{student_id}",
     response_model=StudentRead,
@@ -164,8 +158,6 @@ def read_student(
 ):
     """عرض طالب واحد باستخدام المعرّف الداخلي."""
     return require_student(db, student_id)
-
-
 @app.put(
     "/api/students/{student_id}",
     response_model=StudentRead,
@@ -193,8 +185,6 @@ def replace_student(
             data.model_dump(),
         ),
     )
-
-
 @app.patch(
     "/api/students/{student_id}",
     response_model=StudentRead,
@@ -238,7 +228,6 @@ def edit_student(
             changes,
         ),
     )
-
 @app.delete(
     "/api/students/{student_id}",
     status_code=status.HTTP_204_NO_CONTENT,
